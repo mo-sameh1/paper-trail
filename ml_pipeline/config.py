@@ -6,8 +6,9 @@ class TrainingConfig(BaseSettings):
     Configuration parameters strictly for the ML Training Pipeline.
     """
 
-    dataset_name: str = "daishen/legal-ner"
-    max_samples: int = 1000
+    dataset_name: str = "tonytan48/Re-DocRED"
+    max_samples: int = 1000  # Generic sample limit
+    docred_sample_limit: int = 50  # Smaller limit for evaluating checkpoint 1 pipeline
 
     lora_r: int = 8
     lora_alpha: int = 16

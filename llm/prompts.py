@@ -18,6 +18,20 @@ class NERPrompts:
         ),
     ]
 
+    RELATION_EXTRACTION_PROMPT = (
+        "Analyze the following document and extract all explicitly stated entity "
+        "relationships. Return the output STRICTLY as valid JSON matching the "
+        "following schema:\n"
+        "{\n"
+        '  "relationships": [\n'
+        '    {"subject": "Entity1", "relation": "RelationType", "object": "Entity2", '
+        '"confidence": 0.95}\n'
+        "  ]\n"
+        "}\n\n"
+        "Document:\n"
+        "{document_text}"
+    )
+
     @staticmethod
     def format_training_prompt(
         instruction: str, input_text: str, output_text: str
