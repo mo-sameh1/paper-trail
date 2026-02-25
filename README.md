@@ -41,6 +41,3 @@ Run the extraction integration script. This logic feeds the `InferenceService` m
 ```powershell
 python -m backend.extract_and_store
 ```
-
-### Next Steps / Phase 3
-The next phase will involve attaching a React/Node frontend to consume our FastAPI endpoints naturally via user-facing prompts.
