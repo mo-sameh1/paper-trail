@@ -49,3 +49,6 @@ htmlcov/
 # ML outputs
 qlora-out/
 final_adapter/
+
+# Agent Config
+.agent/
