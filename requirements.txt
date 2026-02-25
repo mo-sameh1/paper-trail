@@ -1,0 +1,18 @@
+torch
+transformers
+peft
+bitsandbytes
+datasets
+accelerate
+trl
+fastapi
+uvicorn
+neo4j
+python-dotenv
+
+# Dev dependencies
+black
+isort
+flake8
+mypy
+pytest
