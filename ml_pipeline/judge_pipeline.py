@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, Set, Tuple
 
 import torch
 
@@ -42,7 +42,7 @@ class JudgePipeline:
         """
         Parses docred ground truth specifically into (subject, relation, object) tuples.
         """
-        triples = set()
+        triples: Set[Tuple[str, str, str]] = set()
         labels = doc.get("labels", [])
         vertex_set = doc.get("vertexSet", [])
 
@@ -104,8 +104,8 @@ class JudgePipeline:
                     extracted_triples.add((subj, obj))
 
             ground_truth = self._get_ground_truth_triples(doc)
-            # Simplify ground truth to (subject, object) to measure entity linking recall easily
-            # for baseline checkout.
+            # Simplify ground truth to (subject, object) to measure entity linking
+            # recall easily for baseline checkout.
             gt_simplified = {(s, o) for s, r, o in ground_truth}
 
             true_positives = len(extracted_triples.intersection(gt_simplified))
