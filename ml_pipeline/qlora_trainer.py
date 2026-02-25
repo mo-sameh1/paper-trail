@@ -3,8 +3,8 @@ QLoRA fine-tuning script utilizing centralized LLM components.
 """
 
 from datasets import load_dataset  # type: ignore
-from transformers import TrainingArguments  # type: ignore
-from trl import SFTTrainer  # type: ignore
+from transformers import TrainingArguments
+from trl import SFTTrainer
 
 from llm.model import LLMManager
 from llm.prompts import NERPrompts
