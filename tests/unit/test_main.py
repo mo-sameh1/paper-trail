@@ -1,13 +1,14 @@
-from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch
-from typing import Generator
-import sys
 import os
+import sys
+from typing import Generator
+from unittest.mock import Mock, patch
+
+from fastapi.testclient import TestClient
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from backend.main import app, get_db  # noqa: E402
 from backend.interfaces import GraphDatabaseInterface  # noqa: E402
+from backend.main import app, get_db  # noqa: E402
 
 
 def override_get_db() -> Generator[Mock, None, None]:

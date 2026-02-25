@@ -9,6 +9,7 @@ fastapi
 uvicorn
 neo4j
 python-dotenv
+pydantic-settings
 
 # Dev dependencies
 black

@@ -1,38 +1,32 @@
-"""
-Loads a subset of the Hugging Face `legal-ner` dataset and formats it into
-instruction-response pairs suitable for LLM fine-tuning.
-"""
-
 import json
 from typing import Dict, List
 
 from datasets import load_dataset  # type: ignore
-from dotenv import load_dotenv
 
-load_dotenv()
+from llm.prompts import NERPrompts
+from ml_pipeline.config import training_config
 
 
-def format_legal_ner_dataset(output_path: str, max_samples: int = 1000) -> None:
+def format_legal_ner_dataset(output_path: str) -> None:
     """
     Downloads `legal-ner` dataset and formats it for instruction tuning.
     """
-    print("Loading dataset: daishen/legal-ner")
+    dataset_name = training_config.dataset_name
+    print(f"Loading dataset: {dataset_name}")
     try:
-        dataset = load_dataset("daishen/legal-ner", split="test")
+        dataset = load_dataset(dataset_name, split="test")
     except Exception as e:
         print(f"Failed to load dataset: {e}")
         return
 
     formatted_data: List[Dict[str, str]] = []
+    max_samples = training_config.max_samples
 
     for i, example in enumerate(dataset):
         if i >= max_samples:
             break
 
-        instruction = (
-            "Extract the named entities (PERSON, ORGANIZATION, LOCATION) "
-            "from the following legal text."
-        )
+        instruction = NERPrompts.SYSTEM_INSTRUCTION
 
         # legal-ner usually provides tokens and ner_tags
         if "tokens" in example and "ner_tags" in example:
