@@ -8,6 +8,9 @@ from backend.config import db_config
 from backend.database import Neo4jGraphDatabase
 from llm.inference import InferenceService
 from ml_pipeline.process_docred import DocredProcessor
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class GraphExtractionDemo:
@@ -19,8 +22,8 @@ class GraphExtractionDemo:
         self.db = Neo4jGraphDatabase(db_config.uri, db_config.user, db_config.password)
 
     def run_demo(self) -> None:
-        print("Starting Graph DB Extraction & Storage Demo.")
-        print("Clearning graph database for fresh checkout environment...")
+        logger.info("Starting Graph DB Extraction & Storage Demo.")
+        logger.info("Clearning graph database for fresh checkout environment...")
 
         # Neo4jGraphDatabase abstracts query execution usually, but we can do
         # a raw clear here:
@@ -31,7 +34,7 @@ class GraphExtractionDemo:
 
         # 1. Process and Insert
         for i, doc in enumerate(docs):
-            print(f"\\nProcessing Document {i + 1}/{len(docs)}...")
+            logger.info(f"Processing Document {i + 1}/{len(docs)}...")
 
             # Currently this hits the inference mock/wrapper.
             # This demonstrates the modular integration point.
@@ -42,10 +45,10 @@ class GraphExtractionDemo:
                 entities=graph_data["entities"],
                 relationships=graph_data["relationships"],
             )
-            print("Successfully inserted nodes and edges.")
+            logger.info("Successfully inserted nodes and edges.")
 
         # 2. Test Cypher Query
-        print("\\n--- Querying the Embedded Graph Data ---")
+        logger.info("--- Querying the Embedded Graph Data ---")
         query = (
             "MATCH (s)-[r]->(o) "
             "RETURN s.name AS subject, type(r) AS relation, o.name AS object "
@@ -57,9 +60,9 @@ class GraphExtractionDemo:
                 subject = record.get("subject", "Unknown_Subj")
                 relation = record.get("relation", "RELATION")
                 obj = record.get("object", "Unknown_Obj")
-                print(f"Found Edge: ({subject}) -[{relation}]-> ({obj})")
+                logger.info(f"Found Edge: ({subject}) -[{relation}]-> ({obj})")
 
-        print("\\nDemo complete.")
+        logger.info("Demo complete.")
         self.db.close()
 
 

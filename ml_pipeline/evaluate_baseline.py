@@ -9,35 +9,38 @@ import torch
 
 from llm.model import LLMManager
 from llm.prompts import NERPrompts
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def evaluate_model() -> None:
     """
     Loads 4-bit model via LLMManager, runs test prompts, and outputs metrics.
     """
-    print("Loading LLM Manager in evaluation mode...")
+    logger.info("Loading LLM Manager in evaluation mode...")
     llm = LLMManager(is_training=False)
 
-    print("\n--- Baseline Evaluation ---")
+    logger.info("--- Baseline Evaluation ---")
     start_time = time.time()
 
     for i, prompt in enumerate(NERPrompts.EVALUATION_SAMPLES):
         response = llm.generate(prompt)
 
-        print(f"\nPrompt {i+1}: {prompt}")
-        print(f"Response: {response}")
+        logger.info(f"Prompt {i+1}: {prompt}")
+        logger.info(f"Response: {response}")
 
     duration = time.time() - start_time
-    print(
-        f"\nTotal inference time for {len(NERPrompts.EVALUATION_SAMPLES)} "
+    logger.info(
+        f"Total inference time for {len(NERPrompts.EVALUATION_SAMPLES)} "
         f"prompts: {duration:.2f} seconds"
     )
 
     if torch.cuda.is_available():
         allocated = torch.cuda.memory_allocated() / 1024**3
-        print(f"Allocated VRAM: {allocated:.2f} GB")
+        logger.info(f"Allocated VRAM: {allocated:.2f} GB")
     else:
-        print("CUDA not available. VRAM could not be measured.")
+        logger.warning("CUDA not available. VRAM could not be measured.")
 
 
 if __name__ == "__main__":

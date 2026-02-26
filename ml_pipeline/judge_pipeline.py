@@ -7,12 +7,15 @@ import torch
 from llm.model import LLMManager
 from llm.prompts import NERPrompts
 from ml_pipeline.process_docred import DocredProcessor
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class JudgePipeline:
     """
-    Evaluates the LLM's entity relation extraction capabilities against ground truth data.
-    Calculates Precision, Recall, and F1-Score.
+    Evaluates the LLM's entity relation extraction capabilities against ground
+    truth data. Calculates Precision, Recall, and F1-Score.
     """
 
     def __init__(self, limit: int = 5) -> None:
@@ -41,33 +44,9 @@ class JudgePipeline:
     ) -> Set[Tuple[str, str, str]]:
         """
         Parses docred ground truth specifically into (subject, relation, object) tuples.
+        Delegates to DocredProcessor for the canonical implementation.
         """
-        triples: Set[Tuple[str, str, str]] = set()
-        labels = doc.get("labels", [])
-        vertex_set = doc.get("vertexSet", [])
-
-        if not labels or not vertex_set:
-            return triples
-
-        for label in labels:
-            try:
-                # docred maps entities via indices pointing to the vertexSet
-                subj_idx = label.get("head")
-                obj_idx = label.get("tail")
-                rel_type = label.get("relation")
-
-                if subj_idx is None or obj_idx is None or rel_type is None:
-                    continue
-
-                # get the primary string name for the entity
-                subj_name = vertex_set[subj_idx][0]["name"].lower()
-                obj_name = vertex_set[obj_idx][0]["name"].lower()
-
-                triples.add((subj_name, rel_type, obj_name))
-            except (IndexError, KeyError):
-                continue
-
-        return triples
+        return DocredProcessor.get_ground_truth_triples(doc)
 
     def evaluate(self) -> None:
         """
@@ -75,19 +54,23 @@ class JudgePipeline:
         """
         docs = self.processor.fetch_validation_batch()
         if not docs:
-            print("No documents fetched. Aborting evaluation.")
+            logger.error("No documents fetched. Aborting evaluation.")
             return
 
         total_true_positives = 0
         total_false_positives = 0
         total_false_negatives = 0
 
-        print(f"Beginning evaluation on {len(docs)} documents.")
+        logger.info(f"Beginning evaluation on {len(docs)} documents.")
 
         for i, doc in enumerate(docs):
-            print(f"\nEvaluating Context {i + 1}/{len(docs)}...")
-            prompt = NERPrompts.RELATION_EXTRACTION_PROMPT.format(
+            logger.info(f"Evaluating Context {i + 1}/{len(docs)}...")
+            user_message = NERPrompts.RELATION_EXTRACTION_USER.format(
                 document_text=doc["text"]
+            )
+            prompt = self.llm.format_chat_prompt(
+                system_message=NERPrompts.SYSTEM_INSTRUCTION,
+                user_message=user_message,
             )
 
             # Request extraction up to 300 new tokens
@@ -116,10 +99,10 @@ class JudgePipeline:
             total_false_positives += false_positives
             total_false_negatives += false_negatives
 
-            print(
-                f"--> Extracted: {len(extracted_triples)} | Got Right: {true_positives}"
+            logger.info(
+                f"Extracted: {len(extracted_triples)} | Got Right: {true_positives}"
             )
-            print(f"--> Ground Truths Total: {len(ground_truth)}")
+            logger.info(f"Ground Truths Total: {len(ground_truth)}")
 
         precision = (
             total_true_positives / (total_true_positives + total_false_positives)
@@ -137,20 +120,20 @@ class JudgePipeline:
             else 0.0
         )
 
-        print("\n" + "=" * 40)
-        print("INITIAL PRELIMINARY RESULTS (CHECKPOINT 1)")
-        print("=" * 40)
-        print(f"Documents Evaluated: {len(docs)}")
-        print(f"Total True Positives : {total_true_positives}")
-        print(f"Total False Positives: {total_false_positives}")
-        print(f"Total False Negatives: {total_false_negatives}")
-        print("-" * 40)
-        print(f"Precision  : {precision:.4f}")
-        print(f"Recall     : {recall:.4f}")
-        print(f"F1-Score   : {f1_score:.4f}")
+        logger.info("=" * 40)
+        logger.info("INITIAL PRELIMINARY RESULTS (CHECKPOINT 1)")
+        logger.info("=" * 40)
+        logger.info(f"Documents Evaluated: {len(docs)}")
+        logger.info(f"Total True Positives : {total_true_positives}")
+        logger.info(f"Total False Positives: {total_false_positives}")
+        logger.info(f"Total False Negatives: {total_false_negatives}")
+        logger.info("-" * 40)
+        logger.info(f"Precision  : {precision:.4f}")
+        logger.info(f"Recall     : {recall:.4f}")
+        logger.info(f"F1-Score   : {f1_score:.4f}")
 
         if torch.cuda.is_available():
-            print(f"\nVRAM Used: {torch.cuda.memory_allocated() / 1024**3:.2f} GB")
+            logger.info(f"VRAM Used: {torch.cuda.memory_allocated() / 1024**3:.2f} GB")
 
 
 if __name__ == "__main__":

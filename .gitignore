@@ -52,3 +52,6 @@ final_adapter/
 
 # Agent Config
 .agent/
+
+hf_cache/
+preliminary_results.md

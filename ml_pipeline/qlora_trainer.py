@@ -4,11 +4,14 @@ QLoRA fine-tuning script utilizing centralized LLM components.
 
 from datasets import load_dataset  # type: ignore
 from transformers import TrainingArguments
-from trl import SFTTrainer
+from trl.trainer.sft_trainer import SFTTrainer
 
 from llm.model import LLMManager
 from llm.prompts import NERPrompts
 from ml_pipeline.config import training_config
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def train_qlora(data_path: str) -> None:
@@ -54,12 +57,12 @@ def train_qlora(data_path: str) -> None:
         formatting_func=formatting_prompts_func,
     )
 
-    print("Starting QLoRA training...")
+    logger.info("Starting QLoRA training...")
     trainer.train()
 
     output_dir = training_config.output_dir
     trainer.model.save_pretrained(f"{output_dir}/final_adapter")  # type: ignore
-    print("Training complete. Adapter saved.")
+    logger.info("Training complete. Adapter saved.")
 
 
 if __name__ == "__main__":

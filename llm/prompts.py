@@ -5,8 +5,8 @@ class NERPrompts:
     """
 
     SYSTEM_INSTRUCTION = (
-        "Extract the named entities (PERSON, ORGANIZATION, LOCATION) "
-        "from the following legal text."
+        "You are an expert at extracting entity relationships from text. "
+        "You always respond with valid JSON only, no extra text."
     )
 
     # Standard set of prompts for qualitative baseline testing
@@ -18,18 +18,44 @@ class NERPrompts:
         ),
     ]
 
-    RELATION_EXTRACTION_PROMPT = (
+    RELATION_EXTRACTION_USER = (
         "Analyze the following document and extract all explicitly stated entity "
         "relationships. Return the output STRICTLY as valid JSON matching the "
         "following schema:\n"
-        "{\n"
+        "{{\n"
         '  "relationships": [\n'
-        '    {"subject": "Entity1", "relation": "RelationType", "object": "Entity2", '
-        '"confidence": 0.95}\n'
+        '    {{"subject": "Entity1", "relation": "RelationType", '
+        '"object": "Entity2", "confidence": 0.95}}\n'
         "  ]\n"
-        "}\n\n"
+        "}}\n\n"
         "Document:\n"
         "{document_text}"
+    )
+
+    JUDGE_SYSTEM_INSTRUCTION = (
+        "You are a strict evaluation judge for entity relationship extraction. "
+        "You compare extracted triples against ground truth triples and determine "
+        "matches. You always respond with valid JSON only, no extra text."
+    )
+
+    JUDGE_USER = (
+        "Compare the EXTRACTED relationships against the GROUND TRUTH relationships "
+        "for the same document. Two triples match if they refer to the same pair of "
+        "real-world entities, even if the names are slightly different "
+        "(e.g. \"Schneider\" matches \"Wilfried Schneider\"). "
+        "Ignore the relation type — only judge whether the subject-object entity "
+        "pair matches.\n\n"
+        "EXTRACTED (subject, object):\n{extracted_triples}\n\n"
+        "GROUND TRUTH (subject, object):\n{ground_truth_triples}\n\n"
+        "Return STRICTLY valid JSON with this schema:\n"
+        "{{\n"
+        '  "true_positives": <int>,\n'
+        '  "false_positives": <int>,\n'
+        '  "false_negatives": <int>,\n'
+        '  "matched_pairs": [\n'
+        '    {{"extracted": ["subj", "obj"], "ground_truth": ["subj", "obj"]}}\n'
+        "  ]\n"
+        "}}"
     )
 
     @staticmethod
